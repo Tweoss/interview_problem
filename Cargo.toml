@@ -1,0 +1,17 @@
+[package]
+name = "interview_problem"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+actix-web = "3.3.3"
+base64 = "0.13.0"
+crypto-hash = "0.3.4"
+futures-core = "0.3.21"
+futures-util = "0.3.21"
+rand = "0.8.5"
+rsa = "0.5.0"
+serde = "1.0.136"
+serde_json = "1.0.79"
