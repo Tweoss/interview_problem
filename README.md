@@ -1,7 +1,20 @@
-# Building and Running
-`cargo run`
+# Build, Run, Test
+To build the server and the testing binary then execute both, run the shell script `run_test.sh`.
+```bash
+./run_test.sh
+```
 
-# Instructions
+# General Details
+The `solution` folder contains the server. 
+`main.rs` contains the boilerplate for starting the server. Keys are generated or loaded here, and the threads for handling requests are spawned here. 
+`crypto.rs` contains the implementation of the instructions on serde_json Values. 
+`routes.rs` contains the handlers for the server that call the crypto functions. 
+
+The `testing` folder contains some testing code for the server. 
+`main.rs` runs the checking code.
+`checks.rs` contains the checks for each endpoint. 
+
+# Original Instructions
 
 1. Has two endpoints /encrypt and /decrypt. Each endpoint should take a JSON payload.
 2. The server’s key(s) should be generated on first start and written to disk, and should be read in on subsequent startups.

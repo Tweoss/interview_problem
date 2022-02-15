@@ -13,14 +13,11 @@ pub async fn encrypt(text: String, data: web::Data<AppState>) -> Result<String, 
 }
 
 pub async fn decrypt(text: String, data: web::Data<AppState>) -> Result<String, HttpResponse> {
-    Ok(serde_json::to_string(
-        &detect_and_decrypt(
-            serde_json::from_str(&text)
-                .map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?,
-            &data.private_key,
-        )
-        .map_err(|e| HttpResponse::BadRequest().body(e))?,
-    )
+    Ok(serde_json::to_string(&detect_and_decrypt(
+        &mut serde_json::from_str(&text)
+            .map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?,
+        &data.private_key,
+    ))
     .map_err(|_| HttpResponse::BadRequest())?)
 }
 
@@ -42,6 +39,7 @@ pub async fn verify(text: String, data: web::Data<AppState>) -> Result<HttpRespo
             serde_json::from_str(&text)
                 .map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?,
             &data.public_key,
+            &data.private_key,
         )
     {
         Ok(HttpResponse::NoContent().finish())
