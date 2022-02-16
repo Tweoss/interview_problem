@@ -27,20 +27,19 @@ pub async fn sign(text: String, data: web::Data<AppState>) -> Result<String, Htt
             "signature": get_signature(
                 serde_json::from_str(&text).map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?,
                 &data.private_key,
-            )?
+            )
         }
     }
     .to_string())
 }
 
 pub async fn verify(text: String, data: web::Data<AppState>) -> Result<HttpResponse, HttpResponse> {
-    if Ok(true)
-        == get_verification(
-            serde_json::from_str(&text)
-                .map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?,
-            &data.public_key,
-            &data.private_key,
-        )
+    if get_verification(
+        serde_json::from_str(&text).map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?,
+        &data.public_key,
+        &data.private_key,
+    )
+    .map_err(|e| HttpResponse::BadRequest().body(e))?
     {
         Ok(HttpResponse::NoContent().finish())
     } else {

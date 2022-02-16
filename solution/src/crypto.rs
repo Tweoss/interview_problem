@@ -121,15 +121,16 @@ pub fn detect_and_decrypt(data: &mut Value, private_key: &RsaPrivateKey) -> Valu
 
 /// Get a signature for a serde_json::Value using the private key.
 /// Hashes the value using SHA256 and then signs the hash using the private key.
-pub fn get_signature(payload: Value, private_key: &RsaPrivateKey) -> Result<String, String> {
-    Ok(base64::encode(
+pub fn get_signature(payload: Value, private_key: &RsaPrivateKey) -> String {
+    base64::encode(
         private_key
             .sign(
                 PaddingScheme::new_pkcs1v15_sign(None),
                 &digest(Algorithm::SHA256, payload.to_string().as_bytes()),
             )
-            .map_err(|_| "failed to sign")?,
-    ))
+            // padding scheme guaranteed to be valid
+            .unwrap(),
+    )
 }
 
 /// Verify a signature for a serde_json::Value using the public key. Decrypts using the private key any encrypted fields.
