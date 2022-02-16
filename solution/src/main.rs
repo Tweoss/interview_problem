@@ -30,12 +30,12 @@ async fn main() -> std::io::Result<()> {
             // limit size of payload
             .app_data(String::configure(|cfg| cfg.limit(4096)))
             .route("/", web::get().to(greet))
-            .route("/encrypt", web::get().to(encrypt))
-            .route("/decrypt", web::get().to(decrypt))
-            .route("/sign", web::get().to(sign))
-            .route("/verify", web::get().to(verify))
+            .route("/encrypt", web::post().to(encrypt))
+            .route("/decrypt", web::post().to(decrypt))
+            .route("/sign", web::post().to(sign))
+            .route("/verify", web::post().to(verify))
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("0.0.0.0", 8080))?
     .run()
     .await
 }

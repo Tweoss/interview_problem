@@ -12,7 +12,7 @@ pub async fn test_encrypt(
 ) -> Result<Value, String> {
     let url = format!("{}/encrypt", base_url);
     let response = client
-        .get(&url)
+        .post(&url)
         .body(base_data.to_string())
         .send()
         .await
@@ -47,7 +47,7 @@ pub async fn test_decrypt(
 ) -> Result<(), String> {
     let url = format!("{}/decrypt", base_url);
     let response = client
-        .get(&url)
+        .post(&url)
         .body(encrypted_data.to_string())
         .send()
         .await
@@ -77,7 +77,7 @@ pub async fn test_signature(
 ) -> Result<String, String> {
     let url = format!("{}/sign", base_url);
     let response = client
-        .get(&url)
+        .post(&url)
         .body(base_data.to_string())
         .send()
         .await
@@ -106,7 +106,7 @@ pub async fn test_verification(
 ) -> Result<(), String> {
     let url = format!("{}/verify", base_url);
     let response = client
-        .get(&url)
+        .post(&url)
         .body(
             json! ({
                 "data": encrypted_data,
