@@ -10,9 +10,10 @@ The `solution` folder contains the server.
 `crypto.rs` contains the implementation of the instructions on serde_json Values. 
 `routes.rs` contains the handlers for the server that call the crypto functions. 
 
-The `testing` folder contains some testing code for the server. 
+The `testing` folder contains non-exhaustive testing code for the server. 
 `main.rs` runs the checking code.
 `checks.rs` contains the checks for each endpoint. 
+`negative_checks.rs` contains checks for each endpoint that should fail.
 
 # Original Instructions
 

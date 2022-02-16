@@ -1,24 +1,44 @@
+use colored::Colorize;
 use serde_json::{json, Value};
 
 mod checks;
+mod negative_checks;
 
 async fn run_tests(base_url: &str, client: &reqwest::Client, bodies: Vec<(String, Value)>) {
     use checks::*;
+    println!("{}", "==== Running Positive Tests ====".blue().bold());
     for (name, body) in bodies {
-        println!("== Running test {} ==", name);
+        println!("{}", format!("== Running test {} ==", name).blue());
         let encrypted = test_encrypt(base_url, client, &body).await.unwrap();
-        println!("encryption passed");
+        println!("{}", "encryption passed".green());
         test_decrypt(base_url, client, &encrypted, &body)
             .await
             .unwrap();
-        println!("decryption passed");
+        println!("{}", "decryption passed".green());
         let signature = test_signature(base_url, client, &body).await.unwrap();
-        println!("signature passed");
+        println!("{}", "signature passed".green());
         test_verification(base_url, client, &encrypted, &signature)
             .await
             .unwrap();
-        println!("verification passed");
+        println!("{}", "verification passed".green());
     }
+}
+
+async fn run_negative_tests(base_url: &str, client: &reqwest::Client) {
+    use negative_checks::*;
+    println!("{}", "==== Running Negative Tests ====".blue().bold());
+    test_encrypt_empty(base_url, client).await.unwrap();
+    println!("{}", "encrypting empty passed".green());
+    test_encrypt_array_first(base_url, client).await.unwrap();
+    println!("{}", "encrypting array first passed".green());
+    test_decrypt_empty(base_url, client).await.unwrap();
+    println!("{}", "decrypting empty passed".green());
+    test_signature_invalid(base_url, client).await.unwrap();
+    println!("{}", "signing invalid passed".green());
+    test_verify_missing_signature(base_url, client)
+        .await
+        .unwrap();
+    println!("{}", "verifying missing signature passed".green());
 }
 
 #[tokio::main]
@@ -70,10 +90,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     {
                         "nice": "to meet you",
                     }
-                }
-            )
+                },
+            ),
         ],
     )
     .await;
+    run_negative_tests(base_url, &client).await;
     Ok(())
 }
