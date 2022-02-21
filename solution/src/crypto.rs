@@ -160,3 +160,19 @@ pub fn get_verification(
         )
         .is_ok())
 }
+
+/// Accept a Value containing the fields to encrypt. Returns the vector containing those fields.
+pub fn get_config(payload: &Value) -> Result<Vec<String>, String> {
+    Ok(payload
+        .get("fieldsToEncrypt")
+        .ok_or("missing fieldsToEncrypt")?
+        .as_array()
+        .ok_or("fieldsToEncrypt must be an array")?
+        .iter()
+        .map(|x| {
+            x.as_str()
+                .ok_or("fieldsToEncrypt must be a string")
+                .map(|x| x.to_string())
+        })
+        .collect::<Result<Vec<_>, _>>()?)
+}

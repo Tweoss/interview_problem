@@ -45,3 +45,12 @@ pub async fn verify(text: String, data: web::Data<AppState>) -> Result<HttpRespo
         Err(HttpResponse::BadRequest().finish())
     }
 }
+
+pub async fn config(text: String, data: web::Data<AppState>) -> Result<HttpResponse, HttpResponse> {
+    let mut fields = data.fields_to_encrypt.write().unwrap();
+    let value =
+        serde_json::from_str(&text).map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?;
+    *fields = get_config(&value).map_err(|e| HttpResponse::BadRequest().body(e))?;
+    println!("{:?}", fields);
+    Ok(HttpResponse::NoContent().finish())
+}

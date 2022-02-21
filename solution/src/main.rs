@@ -1,6 +1,8 @@
 use actix_web::FromRequest;
 use actix_web::{web, App, HttpServer, Responder};
 use rand::rngs::OsRng;
+use std::sync::Arc;
+use std::sync::RwLock;
 
 mod crypto;
 mod routes;
@@ -9,6 +11,7 @@ mod routes;
 pub struct AppState {
     public_key: rsa::RsaPublicKey,
     private_key: rsa::RsaPrivateKey,
+    fields_to_encrypt: Arc<RwLock<Vec<String>>>,
 }
 
 async fn greet() -> impl Responder {
@@ -22,6 +25,7 @@ async fn main() -> std::io::Result<()> {
     let data = AppState {
         public_key,
         private_key,
+        fields_to_encrypt: Arc::new(RwLock::new(vec![])),
     };
     HttpServer::new(move || {
         use routes::*;
@@ -34,6 +38,7 @@ async fn main() -> std::io::Result<()> {
             .route("/decrypt", web::post().to(decrypt))
             .route("/sign", web::post().to(sign))
             .route("/verify", web::post().to(verify))
+            .route("/config", web::post().to(config))
     })
     .bind(("0.0.0.0", 8080))?
     .run()
