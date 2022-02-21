@@ -82,20 +82,21 @@ fn decrypt_private_string(priv_key: &RsaPrivateKey, data: &str) -> Result<String
 
 /// Takes a serde_json::Value and encrypts it using the public key on the first level of the JSON.
 /// Errors if the value is not an object on the first level.
-pub fn encrypt_depth_1(data: Value, public_key: RsaPublicKey) -> Result<Value, String> {
-    let mut data = data;
+pub fn encrypt_depth_1(data: &Value, public_key: &RsaPublicKey) -> Result<Value, String> {
+    let mut data = data.clone();
     for entry in data
         .as_object_mut()
         .ok_or("data must be a json map on the first level")?
         .values_mut()
     {
-        *entry = Value::String(encrypt_pub_string(&public_key, &entry.to_string())?);
+        *entry = Value::String(encrypt_pub_string(public_key, &entry.to_string())?);
     }
     Ok(data)
 }
 
 /// Recursively traverses a serde_json::Value and decrypts all strings using the private key.
-pub fn detect_and_decrypt(data: &mut Value, private_key: &RsaPrivateKey) -> Value {
+pub fn detect_and_decrypt(data: &Value, private_key: &RsaPrivateKey) -> Value {
+    let mut data = data.clone();
     if let Some(map) = data.as_object_mut() {
         for entry in map.values_mut() {
             if let Value::String(string) = entry {
@@ -116,12 +117,12 @@ pub fn detect_and_decrypt(data: &mut Value, private_key: &RsaPrivateKey) -> Valu
             }
         }
     }
-    data.clone()
+    data
 }
 
 /// Get a signature for a serde_json::Value using the private key.
 /// Hashes the value using SHA256 and then signs the hash using the private key.
-pub fn get_signature(payload: Value, private_key: &RsaPrivateKey) -> String {
+pub fn get_signature(payload: &Value, private_key: &RsaPrivateKey) -> String {
     base64::encode(
         private_key
             .sign(
@@ -136,7 +137,7 @@ pub fn get_signature(payload: Value, private_key: &RsaPrivateKey) -> String {
 /// Verify a signature for a serde_json::Value using the public key. Decrypts using the private key any encrypted fields.
 /// Requires a signature and a data object.
 pub fn get_verification(
-    mut payload: Value,
+    payload: &Value,
     public_key: &RsaPublicKey,
     private_key: &RsaPrivateKey,
 ) -> Result<bool, String> {
@@ -151,12 +152,9 @@ pub fn get_verification(
             PaddingScheme::new_pkcs1v15_sign(None),
             &digest(
                 Algorithm::SHA256,
-                detect_and_decrypt(
-                    payload.get_mut("data").ok_or("missing payload")?,
-                    private_key,
-                )
-                .to_string()
-                .as_bytes(),
+                detect_and_decrypt(payload.get("data").ok_or("missing payload")?, private_key)
+                    .to_string()
+                    .as_bytes(),
             ),
             &signature,
         )
