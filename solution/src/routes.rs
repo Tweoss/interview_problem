@@ -4,9 +4,11 @@ use actix_web::{web, HttpResponse};
 use serde_json::json;
 
 pub async fn encrypt(text: String, data: web::Data<AppState>) -> Result<String, HttpResponse> {
-    Ok(encrypt_depth_1(
+    let fields = data.fields_to_encrypt.read().unwrap();
+    Ok(detect_and_encrypt(
         &serde_json::from_str(&text).map_err(|e| HttpResponse::BadRequest().body(e.to_string()))?,
         &data.public_key,
+        &fields,
     )
     .map_err(|e| HttpResponse::BadRequest().body(e))?
     .to_string())

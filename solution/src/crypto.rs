@@ -2,7 +2,7 @@ use crypto_hash::{digest, Algorithm};
 use rand::rngs::OsRng;
 use rsa::pkcs8::{FromPrivateKey, FromPublicKey, ToPrivateKey, ToPublicKey};
 use rsa::{PaddingScheme, PublicKey, RsaPrivateKey, RsaPublicKey};
-use serde_json::Value;
+use serde_json::{json, Value};
 use std::fs;
 use std::path::Path;
 
@@ -80,16 +80,30 @@ fn decrypt_private_string(priv_key: &RsaPrivateKey, data: &str) -> Result<String
     )
 }
 
-/// Takes a serde_json::Value and encrypts it using the public key on the first level of the JSON.
-/// Errors if the value is not an object on the first level.
-pub fn encrypt_depth_1(data: &Value, public_key: &RsaPublicKey) -> Result<Value, String> {
-    let mut data = data.clone();
-    for entry in data
-        .as_object_mut()
-        .ok_or("data must be a json map on the first level")?
-        .values_mut()
-    {
-        *entry = Value::String(encrypt_pub_string(public_key, &entry.to_string())?);
+/// Takes a serde_json::Value and encrypts it using the public key on every key specified by the Config (/config endpoint).
+pub fn detect_and_encrypt(
+    payload: &Value,
+    public_key: &RsaPublicKey,
+    fields: &[String],
+) -> Result<Value, String> {
+    let mut data = payload.clone();
+    match &mut data {
+        Value::Array(vec) => {
+            for entry in vec.iter_mut() {
+                *entry = detect_and_encrypt(entry, public_key, fields)?;
+            }
+        }
+        Value::Object(map) => {
+            for (key, value) in map.iter_mut() {
+                if fields.contains(&key.to_string()) {
+                    *value = json!(encrypt_pub_string(public_key, &value.to_string())?);
+                } else {
+                    // the value is not to be encrypted, if the value is an array or object, recurse
+                    *value = detect_and_encrypt(value, public_key, fields)?;
+                }
+            }
+        }
+        _ => {}
     }
     Ok(data)
 }
